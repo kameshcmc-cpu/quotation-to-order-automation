@@ -64,10 +64,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if available:
             lines = []
             for p in available:
-                lines.append(
-                    f"  • <b>{p.name}</b> — {p.available_quantity:g} {p.unit} available"
-                    f" @ Rs.{p.base_price:.2f}/{p.unit}"
-                )
+                lines.append(f"  • <b>{p.name}</b> — Rs.{p.base_price:.2f}/{p.unit}")
             product_lines = "\n\n<b>Available Products:</b>\n" + "\n".join(lines)
 
         welcome = (
@@ -122,10 +119,7 @@ async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             return
         lines = ["<b>Available Products:</b>\n"]
         for p in available:
-            lines.append(
-                f"• <b>{p.name}</b>\n"
-                f"  Stock: {p.available_quantity:g} {p.unit}  |  Price: Rs.{p.base_price:.2f}/{p.unit}"
-            )
+            lines.append(f"• <b>{p.name}</b> — Rs.{p.base_price:.2f}/{p.unit}")
         lines.append("\nReply with your requirement to get a quote instantly.")
         await update.message.reply_text("\n".join(lines), parse_mode="HTML")
     finally:
