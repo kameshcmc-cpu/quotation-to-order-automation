@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "python run.py --api-only"
+startCommand = "python run.py"
 healthcheckPath = "/api/stats"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
