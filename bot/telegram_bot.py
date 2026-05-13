@@ -393,22 +393,22 @@ async def process_update(update_data: dict):
     await app.process_update(update)
 
 
-def _register_handlers(app: Application):
+def build_app() -> Application:
+    """Build and return the configured Telegram Application."""
+    app = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("status", status_command))
     app.add_handler(CommandHandler("myquotes", myquotes_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    return app
 
 
 def run_bot():
-    """Run the bot in polling mode (for development)."""
+    """Run the bot in polling mode (legacy / standalone use)."""
     if not settings.TELEGRAM_BOT_TOKEN:
         logger.warning("TELEGRAM_BOT_TOKEN not set. Bot will not start.")
         return
-
-    app = Application.builder().token(settings.TELEGRAM_BOT_TOKEN).build()
-    _register_handlers(app)
-
+    app = build_app()
     logger.info("Starting Telegram bot in polling mode...")
     app.run_polling(drop_pending_updates=True)
