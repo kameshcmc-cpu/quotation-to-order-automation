@@ -57,16 +57,29 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db = SessionLocal()
     try:
         customer = get_or_create_customer(db, update.effective_user)
+        products = crud.get_products(db)
+        available = [p for p in products if p.available_quantity > 0]
+
+        product_lines = ""
+        if available:
+            lines = []
+            for p in available:
+                lines.append(
+                    f"  • <b>{p.name}</b> — {p.available_quantity:g} {p.unit} available"
+                    f" @ Rs.{p.base_price:.2f}/{p.unit}"
+                )
+            product_lines = "\n\n<b>Available Products:</b>\n" + "\n".join(lines)
+
         welcome = (
-            f"Namaste {customer.name}! 🙏\n\n"
-            f"Welcome to {settings.BUSINESS_NAME}.\n\n"
-            f"You can:\n"
-            f"• Tell me what products you need and I'll generate a quote\n"
-            f"• /status — Check your quote status\n"
-            f"• /myquotes — View all your quotes\n\n"
-            f"Just describe what you need and I'll take care of the rest!"
+            f"Namaste <b>{customer.name}</b>!\n\n"
+            f"Welcome to <b>{settings.BUSINESS_NAME}</b>."
+            f"{product_lines}\n\n"
+            f"Just tell me what you need with quantity and I will generate a quote instantly.\n\n"
+            f"<i>Example: I need 200 kg Basmati Rice and 100 kg Toor Dal</i>\n\n"
+            f"/status — Check your quote status\n"
+            f"/myquotes — View all your quotes"
         )
-        await update.message.reply_text(welcome)
+        await update.message.reply_text(welcome, parse_mode="HTML")
     finally:
         db.close()
 
@@ -97,6 +110,26 @@ async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def myquotes_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await status_command(update, context)
+
+
+async def products_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    db = SessionLocal()
+    try:
+        products = crud.get_products(db)
+        available = [p for p in products if p.available_quantity > 0]
+        if not available:
+            await update.message.reply_text("No products available at the moment. Please check back later.")
+            return
+        lines = ["<b>Available Products:</b>\n"]
+        for p in available:
+            lines.append(
+                f"• <b>{p.name}</b>\n"
+                f"  Stock: {p.available_quantity:g} {p.unit}  |  Price: Rs.{p.base_price:.2f}/{p.unit}"
+            )
+        lines.append("\nReply with your requirement to get a quote instantly.")
+        await update.message.reply_text("\n".join(lines), parse_mode="HTML")
+    finally:
+        db.close()
 
 
 # ── Message Handler (Core AI Flow) ────────────────────────────────────────────
@@ -399,6 +432,7 @@ def build_app() -> Application:
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("status", status_command))
     app.add_handler(CommandHandler("myquotes", myquotes_command))
+    app.add_handler(CommandHandler("products", products_command))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     return app
