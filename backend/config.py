@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings
 from typing import Optional
 
@@ -16,7 +17,7 @@ class Settings(BaseSettings):
     BUSINESS_LOGO_PATH: Optional[str] = None
 
     SECRET_KEY: str = "change-this-secret"
-    DATABASE_URL: str = "sqlite:///./quotation_app.db"
+    DATABASE_URL: str = "sqlite:////data/quotation_app.db" if os.path.isdir("/data") else "sqlite:///./quotation_app.db"
     API_BASE_URL: str = "http://localhost:8000"
 
     RAZORPAY_KEY_ID: str = ""
